@@ -18,15 +18,12 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 
+
 class AddFragment : Fragment() {
     private lateinit var binding: FragmentAddBinding
     private lateinit var storageReference: StorageReference
     private lateinit var databaseReference: DatabaseReference
     private var photoSelectedUri: Uri? = null
-
-    companion object {
-        const val PATH_SNAPSHOTS = "snapshots"
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,8 +44,8 @@ class AddFragment : Fragment() {
                 getImageUri.launch("image/*")
             }
         }
-        storageReference = FirebaseStorage.getInstance().getReference(PATH_SNAPSHOTS)
-        databaseReference = FirebaseDatabase.getInstance().getReference(PATH_SNAPSHOTS)
+        storageReference = FirebaseStorage.getInstance().getReference(Constants.PATH_SNAPSHOTS)
+        databaseReference = FirebaseDatabase.getInstance().getReference(Constants.PATH_SNAPSHOTS)
     }
 
     private val getImageUri =
@@ -60,31 +57,32 @@ class AddFragment : Fragment() {
         }
 
     private fun postSnapshot() {
-        binding.progressBar.visibility = View.VISIBLE
-        val key = databaseReference.push().key!!
-
-        if (photoSelectedUri == null) return;
-        storageReference.child(FirebaseAuth.getInstance().currentUser!!.uid).child(key)
-            .putFile(photoSelectedUri!!)
-            .addOnProgressListener {
-                val progress = (100 * it.bytesTransferred / it.totalByteCount).toFloat()
-                binding.progressBar.progress = progress.toInt()
-                binding.tvMessage.text = "$progress%"
-            }
-            .addOnCompleteListener {
-                binding.progressBar.visibility = View.INVISIBLE
-
-            }
-            .addOnSuccessListener {
-                it.storage.downloadUrl.addOnSuccessListener { url ->
-                    saveSnapshot(key, url.toString(), binding.etTitle.text.toString().trim())
-                    binding.tvMessage.text = getString(R.string.post_message_title)
+        with(binding) {
+            progressBar.visibility = View.VISIBLE
+            val key = databaseReference.push().key!!
+            if (photoSelectedUri == null) return;
+            storageReference.child(Helper.getUser()!!.uid).child(key)
+                .putFile(photoSelectedUri!!)
+                .addOnProgressListener {
+                    val progress = (100 * it.bytesTransferred / it.totalByteCount).toFloat()
+                    progressBar.progress = progress.toInt()
+                    tvMessage.text = "$progress%"
                 }
-                binding.progressBar.visibility = View.INVISIBLE
-            }
-            .addOnFailureListener {
-                binding.progressBar.visibility = View.INVISIBLE
-            }
+                .addOnCompleteListener {
+                    progressBar.visibility = View.INVISIBLE
+
+                }
+                .addOnSuccessListener {
+                    it.storage.downloadUrl.addOnSuccessListener { url ->
+                        saveSnapshot(key, url.toString(), etTitle.text.toString().trim())
+                        tvMessage.text = getString(R.string.post_message_title)
+                    }
+                    progressBar.visibility = View.INVISIBLE
+                }
+                .addOnFailureListener {
+                    progressBar.visibility = View.INVISIBLE
+                }
+        }
     }
 
     private fun saveSnapshot(key: String, url: String, title: String) {

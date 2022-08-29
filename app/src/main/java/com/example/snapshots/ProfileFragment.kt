@@ -27,8 +27,8 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         with(binding) {
-            tvName.text = FirebaseAuth.getInstance().currentUser?.displayName
-            tvEmail.text = FirebaseAuth.getInstance().currentUser?.email
+            tvName.text = Helper.getUser()?.displayName
+            tvEmail.text = Helper.getUser()?.email
             btnLogout.setOnClickListener { logout() }
         }
     }
@@ -36,7 +36,7 @@ class ProfileFragment : Fragment() {
     private fun logout() {
         context?.let {
             AuthUI.getInstance().signOut(it).addOnCompleteListener {
-                Toast.makeText(context, "See you later...", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.logout_message, Toast.LENGTH_SHORT).show()
             }
         }
     }
